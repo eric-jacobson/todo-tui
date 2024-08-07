@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	p := tea.NewProgram(initialModel())
+	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("error: %v", err)
 		os.Exit(1)
@@ -31,7 +31,6 @@ type task struct {
 func initialModel() *model {
 	input := textinput.New()
 	return &model{
-		tasks:               []task{{description: "Buy carrots", selected: false}, {description: "Buy celery", selected: false}, {description: "Buy kohlrabi", selected: false}},
 		renderAddItemPrompt: false,
 		addItemPrompt:       input,
 	}
@@ -49,6 +48,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.String() {
 			case "ctrl+c":
 				return m, tea.Quit
+			case "esc":
+				m.addItemPrompt.SetValue("")
+				m.renderAddItemPrompt = false
+				return m, nil
 			case "enter":
 				task := task{description: m.addItemPrompt.Value(), selected: false}
 				m.tasks = append(m.tasks, task)
@@ -103,12 +106,12 @@ func (m model) View() string {
 	}
 
 	if m.renderAddItemPrompt {
-		s += "------------------------------------------------------------------------------------------------------\n"
+		s += "\n------------------------------------------------------------------------------------------------------\n"
 		s += m.addItemPrompt.View()
 		s += "\n------------------------------------------------------------------------------------------------------\n"
+	} else {
+		s += "\n[a]dd, [d]elete, [q]uit\n"
 	}
-
-	s += "\n[a]dd, [d]elete, [q]uit\n"
 
 	return s
 }
